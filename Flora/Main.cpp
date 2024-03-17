@@ -1,6 +1,7 @@
 ﻿#include<iostream>
 #include<string>
 #include<vector>
+#include<memory>
 
 
 class Harvest {
@@ -47,7 +48,7 @@ public:
 		return capacity_;
 	}
 
-	virtual std::vector <Harvest*> produceHarvest() = 0;
+	virtual std::vector <std::unique_ptr<Harvest>> produceHarvest() = 0;
 
 
 
@@ -64,10 +65,10 @@ public:
 	AppleTree(std::string name_,std::string size_,std::string color_,int capacity_):
 			Plants(name_,size_,color_,capacity_){}
 
-	virtual std::vector <Harvest*> produceHarvest() override {
-		std::vector<Harvest*>harvests;
+	virtual std::vector <std::unique_ptr<Harvest>> produceHarvest() override {
+		std::vector<std::unique_ptr<Harvest>>harvests;
 		for (int i = 0; i < GetCapacity(); i++) {
-			harvests.push_back(new Harvest("Apple","Green", 3));
+			harvests.push_back(std::make_unique<Harvest>("Apple","Green", 3));
 		}
 		return harvests;
 	}
@@ -78,10 +79,10 @@ public:
 	Strawberry(std::string name_, std::string size_, std::string color_, int capacity_) :
 		Plants(name_, size_, color_, capacity_) {}
 
-	virtual std::vector <Harvest*> produceHarvest() override {
-		std::vector<Harvest*>harvests;
+	virtual std::vector <std::unique_ptr<Harvest>> produceHarvest() override {
+		std::vector<std::unique_ptr<Harvest>>harvests;
 		for (int i = 0; i < GetCapacity(); i++) {
-			harvests.push_back(new Harvest("Strawberry", "Red", 0.2));
+			harvests.push_back(std::make_unique<Harvest>("Strawberry", "Red", 0.2));
 		}
 		return harvests;
 	}
@@ -90,20 +91,22 @@ public:
 
 int main() {
 	setlocale(LC_ALL, "ru");
-	std::vector<Harvest*>garden;
+	std::vector<std::unique_ptr<Harvest>>garden;
 
 	AppleTree appleTree("Apple","Large", "Green", 1);
-	std::vector<Harvest*>appleHarvest = appleTree.produceHarvest();
-	garden.insert(garden.end(), appleHarvest.begin(), appleHarvest.end());
+	std::vector<std::unique_ptr<Harvest>>appleHarvest = appleTree.produceHarvest();
+	garden.insert(garden.end(), std::make_move_iterator(appleHarvest.begin()), 
+		std::make_move_iterator(appleHarvest.end()));
 
 
 
 	Strawberry strawberry("Strawberry", "Small", "Red", 3);
-	std::vector<Harvest*>strawberryHarvest = strawberry.produceHarvest();
-	garden.insert(garden.end(), strawberryHarvest.begin(), strawberryHarvest.end());
+	std::vector<std::unique_ptr<Harvest>>strawberryHarvest = strawberry.produceHarvest();
+	garden.insert(garden.end(), std::make_move_iterator(strawberryHarvest.begin()), 
+		std::make_move_iterator(strawberryHarvest.end()));
 
 
-	for (Harvest* harvests : garden) {
+	for (const auto& harvests : garden) {
 		std::cout << harvests->GetName() << std::endl;
 		std::cout << harvests->GetColor() << std::endl;
 		std::cout << harvests->GetWeight() << std::endl;
